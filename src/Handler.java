@@ -13,7 +13,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * The Handler class overwrites the DefaultHandler methods for handling
  * DBLP-specific XML elements and attributes. The class iterates through all
  * elements in the input XML file and writes the publication data to
- * corresponding CSV files (e.g., <article> to article.csv).
+ * corresponding CSV files (e.g., <article> elements to article.csv).
  * 
  * @author Lucas Dos Santos
  * @version 1.0 December 2015
@@ -115,9 +115,9 @@ public class Handler extends DefaultHandler {
             phdthesis_fos = new FileOutputStream("output/phdthesis.csv");
             mastersthesis_fos = new FileOutputStream("output/mastersthesis.csv");
             www_fos = new FileOutputStream("output/www.csv");
-            person_fos = new FileOutputStream("output/person.csv");
             writes_fos = new FileOutputStream("output/writes.csv");
             edits_fos = new FileOutputStream("output/edits.csv");
+            person_fos = new FileOutputStream("output/person.csv");
         } catch (Exception e) {
             throw (new SAXException("Error opening output file", e));
         }

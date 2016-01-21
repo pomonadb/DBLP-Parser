@@ -14,7 +14,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * DBLP-specific XML elements and attributes. The class iterates through all
  * elements in the input XML file and writes the publication data to
  * corresponding CSV files (e.g., <article> elements to article.csv).
- * 
+ *
  * @author Lucas Dos Santos
  * @version 1.0 December 2015
  */
@@ -101,7 +101,7 @@ public class Handler extends DefaultHandler {
 
     /**
      * Open all the CSV files.
-     * 
+     *
      * @throws SAXException
      */
     public void openAllFos() throws SAXException {
@@ -137,7 +137,7 @@ public class Handler extends DefaultHandler {
      * Receive notification of the start of an XML element. If it is a DBLP
      * element, reset the Entity object fields, update its type, and set its key
      * and ID.
-     * 
+     *
      * @param namespaceURI
      *            The namespace URI, or the empty string if the element has no
      *            namespace URI or if namespace processing is not being
@@ -151,7 +151,7 @@ public class Handler extends DefaultHandler {
      * @param atts
      *            The attributes attached to the element. If there are no
      *            attributes, it shall be an empty Attributes object.
-     * 
+     *
      * @throws SAXException
      */
     public void startElement(String namespaceURI, String localName,
@@ -217,10 +217,10 @@ public class Handler extends DefaultHandler {
      * entity, write its attributes to the corresponding CSV file. If it is an
      * author or editor, add their names, IDs, and the publication they
      * wrote/edited to the relevant maps.
-     * 
+     *
      * The values written for each entity can be changed to the columns the user
      * wishes to see in the resulting CSV file.
-     * 
+     *
      * @param namespaceURI
      *            The namespace URI, or the empty string if the element has no
      *            namespace URI or if namespace processing is not being
@@ -234,7 +234,7 @@ public class Handler extends DefaultHandler {
      * @param atts
      *            The attributes attached to the element. If there are no
      *            attributes, it shall be an empty Attributes object.
-     * 
+     *
      * @throws SAXException
      */
     public void endElement(String namespaceURI, String localName, String qName)
@@ -367,8 +367,8 @@ public class Handler extends DefaultHandler {
                     HashSet<Integer> publications = new HashSet<Integer>();
                     publications.add(e.getId());
                     authors.put(authorName, publications);
-                    authorName = "";
                 }
+                authorName = "";
             } else if (qName.equals(EDITOR)) {
                 people.put(editorName, personId);
                 personId++;
@@ -378,8 +378,8 @@ public class Handler extends DefaultHandler {
                     HashSet<Integer> publications = new HashSet<Integer>();
                     publications.add(e.getId());
                     editors.put(editorName, publications);
-                    editorName = "";
                 }
+                editorName = "";
             }
         } catch (Exception e) {
             throw (new SAXException("Error writing to file.", e));
@@ -391,19 +391,19 @@ public class Handler extends DefaultHandler {
      * Receive notification of character data inside of a XML element. If it is
      * a DBLP entity, update the Entity object's corresponding fields and
      * attributes.
-     * 
+     *
      * SAX does not guarantee that all the characters of an XML element will be
      * included, so the method concatenates the Entity object's current value
      * with the new characters. Any commas are replaced with spaces as they
-     * would issues with reading the CSV file.
-     * 
+     * would cause issues with reading the CSV file.
+     *
      * @param ch
      *            The characters.
      * @param start
      *            The start position in the character array.
      * @param length
      *            The number of characters to use from the character array.
-     * 
+     *
      * @throws SAXException
      */
     public void characters(char[] ch, int start, int length)
@@ -526,7 +526,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of the end of the XML document, write all the
      * person, author, and editor entries and close all the FileOutputStreams.
-     * 
+     *
      * @throws SAXException
      */
     public void endDocument() throws SAXException {
@@ -573,7 +573,7 @@ public class Handler extends DefaultHandler {
 
     /**
      * Return the String if it is not empty, \N if it is empty.
-     * 
+     *
      * @param s
      *            The String to write.
      */
@@ -583,7 +583,7 @@ public class Handler extends DefaultHandler {
 
     /**
      * Return SAXParseException info in a String.
-     * 
+     *
      * @param spe
      *            The SAXParseException.
      */
@@ -600,7 +600,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of a warning while parsing and print out relevant
      * information.
-     * 
+     *
      * @param e
      *            The warning information encoded as an exception.
      */
@@ -612,7 +612,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of an error while parsing and print out relevant
      * information.
-     * 
+     *
      * @param e
      *            The warning information encoded as an exception.
      */
@@ -624,7 +624,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of a fatal error while parsing and print out
      * relevant information.
-     * 
+     *
      * @param e
      *            The warning information encoded as an exception.
      */

@@ -19,8 +19,8 @@ import csv
 
 def main():
      # get the database name and password from the user
-     db_name = "dblp"# raw_input("Enter the database: ")
-     pw = "password"#getpass.getpass()
+     db_name = raw_input("Enter the database: ")
+     pw = getpass.getpass()
 
      # Connect to the database and create the access point (cursor)
      db = MySQLdb.connect(passwd=pw, db=db_name, local_infile=1)
@@ -29,7 +29,7 @@ def main():
      # Disable autocommit so we can rollback if anything fails
      db.autocommit(False)
 
-     csvDir = "./src/output/"#raw_input("Path to the directory containing the CSV files: ")
+     csvDir = raw_input("Path to the directory containing the CSV files: ")
 
      try:
           create_tables(c)
@@ -45,11 +45,10 @@ def main():
                          fields = get_fields(file_path)
                          table_name, ext = os.path.splitext(file_name)
 
-                         if table_name != "10writes":
-                              # build and execute the sql command to create the table
-                              sql = generate_sql(file_path, db_name, table_name[2:], fields)
-                              print sql
-                              c.execute(sql)
+                         # build and execute the sql command to create the table
+                         sql = generate_sql(file_path, db_name, table_name[2:], fields)
+                         print sql
+                         c.execute(sql)
 
           # Commit to the Database if everything worked
           db.commit()

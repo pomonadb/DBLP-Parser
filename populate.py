@@ -25,6 +25,7 @@ def main():
      # Connect to the database and create the access point (cursor)
      db = MySQLdb.connect(passwd=pw, db=db_name, local_infile=1)
      c = db.cursor()
+     c.execute("SET character_set_connection = latin1")
 
      # Disable autocommit so we can rollback if anything fails
      db.autocommit(False)
@@ -57,6 +58,7 @@ def main():
           c.close()
           c = db.cursor()
           populate_fullpubs(c)
+          populate_coauthor(c)
 
           # commit, close, and exit
           db.commit()
@@ -97,19 +99,138 @@ def create_tables(conn):
 
           "CREATE TABLE publications (eid INTEGER, title VARCHAR(1000),"\
                " month VARCHAR(50), year INTEGER,"\
-               " PRIMARY KEY (eid));"
+               " PRIMARY KEY (eid));",
+
+          "CREATE TABLE co_author( author_id INTEGER, coauthor_id INTEGER,"\
+               " month CHAR(50), year INTEGER, entity_id INTEGER,"\
+               " PRIMARY KEY (author_id, coauthor_id, entity_id),"\
+               " FOREIGN KEY (author_id) REFERENCES person(pid),"\
+               " FOREIGN KEY (coauthor_id) REFERENCES person(pid),"\
+               " FOREIGN KEY (entity_id) REFERENCES entity(id));"
      ]
 
      entity_tuples = [
-          "mastersthesis (eid INTEGER, `key` VARCHAR(250), title VARCHAR(1000), year INTEGER, url VARCHAR(250), ee VARCHAR(450), school VARCHAR(100), ",
-          "phdthesis (eid INTEGER, `key` VARCHAR(250), title VARCHAR(1000), publisher VARCHAR(500), volume VARCHAR(40),  number VARCHAR(30), pages VARCHAR(100), month VARCHAR(50), year INTEGER, url VARCHAR(250), ee VARCHAR(450), note VARCHAR(250), isbn VARCHAR(100), series VARCHAR(500), school VARCHAR(100), ",
-          "article (eid INTEGER,`key` VARCHAR(250),title VARCHAR(1000),publisher VARCHAR(500),journal VARCHAR(100),volume VARCHAR(40),number VARCHAR(30),pages VARCHAR(100),month VARCHAR(50),year INTEGER,url VARCHAR(250),ee VARCHAR(450),crossref VARCHAR(250),cite VARCHAR(1000),note VARCHAR(250),booktitle VARCHAR(250),cdrom VARCHAR(250), ",
+          "mastersthesis (eid INTEGER,"\
+               " `key` CHAR(70),"\
+               " title CHAR(150),"\
+               " year INTEGER, "\
+               " url CHAR(100),"\
+               " ee CHAR(100),"\
+               " school CHAR(100), ",
+          "phdthesis (eid INTEGER,"\
+               " `key` CHAR(70),"\
+               " title CHAR(350),"\
+               " publisher CHAR(50),"\
+               " volume CHAR(20), "\
+               " number CHAR(20), "\
+               "pages CHAR(20), "\
+               "month CHAR(10),"\
+               "year INTEGER, "\
+               "url CHAR(200), "\
+               "ee CHAR(200), "\
+               "note CHAR(100), "\
+               "isbn CHAR(20), "\
+               "series CHAR(100), "\
+               "school CHAR(100), ",
+          "article (eid INTEGER,"\
+               "`key` CHAR(70), "\
+               "title VARCHAR(1000),"\
+               "publisher CHAR(70),"\
+               "journal CHAR(150),"\
+               "volume CHAR(40),"\
+               "number CHAR(30),"\
+               "pages CHAR(20),"\
+               "month CHAR(30),"\
+               "year INTEGER,"\
+               "url CHAR(100),"\
+               "ee VARCHAR(450),"\
+               "crossref CHAR(50),"\
+               "cite VARCHAR(1000),"\
+               "note CHAR(150),"\
+               "booktitle VARCHAR(50),"\
+               "cdrom VARCHAR(50), ",
 
-          "proceedings (eid INTEGER, `key` VARCHAR(250), title VARCHAR(1000), publisher VARCHAR(500), journal VARCHAR(100), volume VARCHAR(40), number VARCHAR(30), pages VARCHAR(100), month VARCHAR(50), year INTEGER, url VARCHAR(250), ee VARCHAR(450), crossref VARCHAR(250),cite VARCHAR(1000),note VARCHAR(250),booktitle VARCHAR(250),isbn VARCHAR(100),series VARCHAR(500),address VARCHAR(100), ",
-          "book (eid INTEGER, `key` VARCHAR(250), title VARCHAR(1000), publisher VARCHAR(500), volume VARCHAR(40), pages VARCHAR(100), year INTEGER, url VARCHAR(250), ee VARCHAR(450), crossref VARCHAR(250),cite VARCHAR(1000),note VARCHAR(250),booktitle VARCHAR(250),isbn VARCHAR(100),series VARCHAR(500),cdrom VARCHAR(250),school VARCHAR(100), ",
-          "incollection (eid INTEGER, `key` VARCHAR(250), title VARCHAR(1000), publisher VARCHAR(500), number VARCHAR(30), pages VARCHAR(100), year INTEGER, url VARCHAR(250), ee VARCHAR(450), crossref VARCHAR(250), cite VARCHAR(1000), note VARCHAR(250),booktitle VARCHAR(250), chapter VARCHAR(250), cdrom VARCHAR(250), ",
-          "inproceedings (eid INTEGER, `key` VARCHAR(250), title VARCHAR(1000), number VARCHAR(30), pages VARCHAR(100), month VARCHAR(50), year INTEGER, url VARCHAR(250), ee VARCHAR(450), crossref VARCHAR(250), cite VARCHAR(1000), note VARCHAR(250), booktitle VARCHAR(250), chapter INTEGER, address VARCHAR(100), cdrom VARCHAR(250), ",
-          "www (eid INTEGER, `key` VARCHAR(250), title VARCHAR(1000), year INTEGER, url VARCHAR(500), ee VARCHAR(450), crossref VARCHAR(250), cite VARCHAR(1000), note VARCHAR(350), booktitle VARCHAR(250), chapter VARCHAR(250), school VARCHAR(100), "
+          "proceedings (eid INTEGER, "\
+               "`key` CHAR(70), "\
+               "title CHAR(550), "\
+               "publisher CHAR(170), "\
+               "journal CHAR(20), "\
+               "volume CHAR(40), "\
+               "number CHAR(15), "\
+               "pages CHAR(20), "\
+               "month CHAR(50), "\
+               "year INTEGER, "\
+               "url CHAR(100), "\
+               "ee CHAR(250), "\
+               "crossref CHAR(25),"\
+               "cite VARCHAR(1000),"\
+               "note CHAR(245),"\
+               "booktitle CHAR(150),"\
+               "isbn CHAR(60),"\
+               "series CHAR(107)),"\
+               "address CHAR(15), ",
+          "book (eid INTEGER, "\
+               "`key` CHAR(70), "\
+               "title CHAR(400), "\
+               "publisher CHAR(70), "\
+               "volume CHAR(20), "\
+               "pages CHAR(25), "\
+               "year INTEGER, "\
+               "url CHAR(150), "\
+               "ee CHAR(275), "\
+               "crossref CHAR(250),"\
+               "cite VARCHAR(1000),"\
+               "note CHAR(100),"\
+               "booktitle CHAR(150),"\
+               "isbn CHAR(60),"\
+               "series CHAR(150),"\
+               "cdrom CHAR(25),"\
+               "school CHAR(50), ",
+          "incollection (eid INTEGER,"\
+               " `key` CHAR(70),"\
+               " title CHAR(250),"\
+               " publisher CHAR(50),"\
+               " number CHAR(30),"\
+               " pages CHAR(100),"\
+               " year INTEGER,"\
+               " url CHAR(250),"\
+               " ee CHAR(450),"\
+               " crossref CHAR(250),"\
+               " cite VARCHAR(1000),"\
+               " note CHAR(250),"\
+               "booktitle CHAR(250),"\
+               " chapter CHAR(250),"\
+               " cdrom CHAR(250), ",
+
+          "inproceedings (eid INTEGER,"\
+               " `key` CHAR(70),"\
+               " title CHAR(600),"\
+               " number CHAR(320),"\
+               " pages CHAR(40),"\
+               " month CHAR(150),"\
+               " year INTEGER,"\
+               " url CHAR(100),"\
+               " ee CHAR(500),"\
+               " crossref CHAR(50),"\
+               " cite VARCHAR(1000),"\
+               " note CHAR(200),"\
+               " booktitle CHAR(150),"\
+               " chapter INTEGER,"\
+               " address CHAR(100),"\
+               " cdrom CHAR(90),",
+
+          "www (eid INTEGER,"\
+               " `key` CHAR(70),"\
+               " title CHAR(70),"\
+               " year INTEGER,"\
+               " url CHAR(500),"\
+               " ee CHAR(50),"\
+               " crossref CHAR(50),"\
+               " cite VARCHAR(800),"\
+               " note CHAR(450),"\
+               " booktitle CHAR(10),"\
+               " chapter CHAR(250),"\
+               " school CHAR(100),"
      ]
 
      create = "CREATE TABLE "
@@ -149,6 +270,22 @@ def populate_fullpubs(c):
      (SELECT entity.eid, title, null, year FROM entity
          INNER JOIN www ON entity.eid = www.eid);
      ''')
+
+def populate_coauthor():
+     c.execute("""
+          INSERT INTO co_author(
+               SELECT p1.pid as author_id, p2.pid as coauthor_id,
+                      P.month as month, P.year as year, P.eid as entity_id
+               FROM person p1, person p2, writes w1, writes w2, publications P
+               WHERE
+                    p1.pid = w1.author_id AND
+                    w1.entity_id = w2.entity_id AND
+                    w2.author_id = p2.pid AND
+                    P.eid = w1.entity_id
+                    AND NOT p1.pid = p2.pid
+          );
+     """)
+
 
 # Build the command to create the table
 def generate_sql(fp, db, table, fields):

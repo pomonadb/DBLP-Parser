@@ -52,6 +52,17 @@ def main():
 
           # Commit to the Database if everything worked
           db.commit()
+
+          # Close the cursor and open a new one -- create joined tables
+          c.close()
+          c = db.cursor()
+          populate_fullpubs(c)
+
+          # commit, close, and exit
+          db.commit()
+          db.close()
+          sys.exit(0)
+
      except Exception as err:
           # undo everything if something broke
           print "SOMETHING BROKE"
@@ -59,6 +70,7 @@ def main():
           print err.args
           print err
           db.rollback()
+          sys.exit(1)
 
 # grab the field names from the csv file
 def get_fields(fp):
@@ -70,15 +82,22 @@ def get_fields(fp):
 def create_tables(conn):
      tables = [
           "CREATE TABLE person (pid INTEGER, name VARCHAR(100), PRIMARY KEY (pid));",
+
           "CREATE TABLE entity (eid INTEGER, PRIMARY KEY (eid));",
+
           "CREATE TABLE writes (author_id INTEGER NOT NULL, entity_id INTEGER,"\
                " PRIMARY KEY (author_id,entity_id),"\
                " FOREIGN KEY (author_id) REFERENCES person (pid),"\
                " FOREIGN KEY (entity_id) REFERENCES entity (eid));",
+
           "CREATE TABLE edits (editor_id INTEGER NOT NULL, entity_id INTEGER,"\
                " PRIMARY KEY (editor_id,entity_id),"\
                " FOREIGN KEY (editor_id) REFERENCES person (pid),"\
-               " FOREIGN KEY (entity_id) REFERENCES entity (eid));"
+               " FOREIGN KEY (entity_id) REFERENCES entity (eid));",
+
+          "CREATE TABLE publications (eid INTEGER, title VARCHAR(1000),"\
+               " month VARCHAR(50), year INTEGER,"\
+               " PRIMARY KEY (eid));"
      ]
 
      entity_tuples = [
@@ -103,6 +122,33 @@ def create_tables(conn):
      for t in tables:
           conn.execute(t)
 
+def populate_fullpubs(c):
+    c.execute('''
+    INSERT INTO publications
+     (SELECT entity.eid, title, month, year FROM entity
+         INNER JOIN phdthesis ON entity.eid = phdthesis.eid)
+     UNION
+     (SELECT entity.eid, title, month, year FROM entity
+         INNER JOIN article ON entity.eid = article.eid)
+     UNION
+     (SELECT entity.eid, title, null, year FROM entity
+         INNER JOIN book ON entity.eid = book.eid)
+     UNION
+     (SELECT entity.eid, title, null, year FROM entity
+         INNER JOIN mastersthesis ON entity.eid = mastersthesis.eid)
+     UNION
+     (SELECT entity.eid, title, null, year FROM entity
+         INNER JOIN incollection ON entity.eid = incollection.eid)
+     UNION
+     (SELECT entity.eid, title, month, year FROM entity
+         INNER JOIN inproceedings ON entity.eid = inproceedings.eid)
+     UNION
+     (SELECT entity.eid, title, month, year FROM entity
+         INNER JOIN proceedings ON entity.eid = proceedings.eid)
+     UNION
+     (SELECT entity.eid, title, null, year FROM entity
+         INNER JOIN www ON entity.eid = www.eid);
+     ''')
 
 # Build the command to create the table
 def generate_sql(fp, db, table, fields):

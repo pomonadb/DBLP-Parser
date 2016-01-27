@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+DBLP_XML_URL="http://dblp.uni-trier.de/xml/dblp.xml.gz"
+DBLP_DTD_URL="http://dblp.uni-trier.de/xml/dblp.dtd"
+
+mkdir staging && echo "--- made stageing directory" &&
+cd staging && echo "--- retrieving datafiles" &&
+curl $DBLP_XML_URL -o dblp.xml.gz && echo "--- XML file downlowded" &&
+curl $DBLP_DTD_URL -o dblp.dtd && echo "--- DTD file downlowded" &&
+gunzip dblp.xml.gz && echo "--- unzipped XML file" &&
+DATA=$(pwd)/dblp.xml &&
+mkdir bin && javac -d bin ../src/*.java && echo "--- compiled parser" &&
+java -cp ./bin -Djdk.xml.entityExpansionLimit=6400000 Parser $DATA &&
+echo "--- Path to CSVs: $(pwd)/output" &&
+echo "--- finished parsing" &&
+echo "--- running population script" &&
+python ../populate.py && echo "--- finished: raw files left in staging directory"

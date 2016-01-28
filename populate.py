@@ -83,7 +83,7 @@ def get_fields(fp):
 # create the tables necessary to read the data.
 def create_tables(conn):
      tables = [
-          "CREATE TABLE person (pid INTEGER, name VARCHAR(100), PRIMARY KEY (pid));",
+          "CREATE TABLE person (pid INTEGER, name CHAR(100), PRIMARY KEY (pid));",
 
           "CREATE TABLE entity (eid INTEGER, PRIMARY KEY (eid));",
 
@@ -97,8 +97,8 @@ def create_tables(conn):
                " FOREIGN KEY (editor_id) REFERENCES person (pid),"\
                " FOREIGN KEY (entity_id) REFERENCES entity (eid));",
 
-          "CREATE TABLE publications (eid INTEGER, title VARCHAR(1000),"\
-               " month VARCHAR(50), year INTEGER,"\
+          "CREATE TABLE publications (eid INTEGER, title CHAR(1000),"\
+               " month CHAR(50), year INTEGER,"\
                " PRIMARY KEY (eid));",
 
           "CREATE TABLE co_author( author_id INTEGER, coauthor_id INTEGER,"\

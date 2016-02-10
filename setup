@@ -1,17 +1,26 @@
 #!/usr/bin/env bash
 
+# DBLP data links -- update if site moves
 DBLP_XML_URL="http://dblp.uni-trier.de/xml/dblp.xml.gz"
 DBLP_DTD_URL="http://dblp.uni-trier.de/xml/dblp.dtd"
 
-mkdir staging && echo "--- made stageing directory" &&
-cd staging && echo "--- retrieving datafiles" &&
-curl $DBLP_XML_URL -o dblp.xml.gz && echo "--- XML file downlowded" &&
-curl $DBLP_DTD_URL -o dblp.dtd && echo "--- DTD file downlowded" &&
-gunzip dblp.xml.gz && echo "--- unzipped XML file" &&
-DATA=$(pwd)/dblp.xml &&
-mkdir bin && javac -d bin ../src/*.java && echo "--- compiled parser" &&
-java -cp ./bin -Djdk.xml.entityExpansionLimit=6400000 Parser $DATA &&
+mkdir staging                      &&
+echo "--- made stageing directory" &&
+cd staging                         &&
+echo "--- retrieving datafiles"    &&
+curl $DBLP_XML_URL -o dblp.xml.gz  && # get the latest DBLP data
+echo "--- XML file downlowded"     &&
+curl $DBLP_DTD_URL -o dblp.dtd     &&
+echo "--- DTD file downloaded"     &&
+gunzip dblp.xml.gz                 && # unzip the DBLP data
+echo "--- unzipped XML file"       &&
+DATA=$(pwd)/dblp.xml               &&
+mkdir bin                          &&
+javac -d bin ../src/*.java         && # compile the java
+echo "--- compiled parser"         &&
+java -cp ./bin -Djdk.xml.entityExpansionLimit=6400000 Parser $DATA && # run the parser
 echo "--- Path to CSVs: $(pwd)/output" &&
-echo "--- finished parsing" &&
-echo "--- running population script" &&
-python ../populate.py && echo "--- finished: raw files left in staging directory"
+echo "--- finished parsing"            &&
+echo "--- running population script"   &&
+python ../populate.py                  && # connect to the DB and populate it with the flat files
+echo "--- finished: raw files left in staging directory"

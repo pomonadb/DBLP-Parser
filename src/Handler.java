@@ -14,7 +14,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * DBLP-specific XML elements and attributes. The class iterates through all
  * elements in the input XML file and writes the publication data to
  * corresponding CSV files (e.g., <article> elements to article.csv).
- * 
+ *
  * @author Lucas Dos Santos
  * @version 1.0 December 2015
  */
@@ -54,6 +54,21 @@ public class Handler extends DefaultHandler {
     private final String SCHOOL = "school";
     private final String CHAPTER = "chapter";
 
+    /** The column names for each csv */
+    private final String ENTITY_COLS = "eid\n";
+    private final String ARTICLE_COLS = "eid,key,title,publisher,journal,volume,number,pages,month,year,url,ee,crossref,cite,note,booktitle,cdrom\n";
+    private final String INPROCEDINGS_COLS = "eid,key,title,number,pages,month,year,url,ee,crossref,cite,note,booktitle,chapter,address,cdrom\n";
+    private final String PROCEEDINGS_COLS = "eid,key,title,publisher,journal,volume,number,pages,year,url,ee,crossref,cite,note,booktitle,isbn,series,address\n";
+    private final String BOOK_COLS = "eid,key,title,publisher,volume,pages,year,url,ee,crossref,cite,note,booktitle,isbn,series,cdrom,school\n";
+    private final String INCOLLECTION_COLS = "eid,key,title,publisher,number,pages,year,url,ee,crossref,cite,note,booktitle,chapter,cdrom\n";
+    private final String PHDTHESIS_COLS = "eid,key,title,publisher,volume,number,pages,month,year,url,ee,note,isbn,series,school\n";
+    private final String MASTERSTHESIS_COLS = "eid,key,title,year,url,ee,school\n";
+    private final String WWW_COLS = "eid,key,title,year,url,ee,crossref,cite,note,booktitle,chapter,school\n";
+    private final String WRITES_COLS = "author_id,entity_id\n";
+    private final String EDITS_COLS = "editor_id,entity_id\n";
+    private final String PERSON_COLS = "pid,name\n";
+
+
     /**
      * Used to keep track of the current Entity being parsed and its surrounding
      * XML element.
@@ -87,6 +102,7 @@ public class Handler extends DefaultHandler {
     private HashMap<String, HashSet<Integer>> authors;
 
     /** The output streams used to write the entities to CSV files. **/
+    private FileOutputStream entity_fos;
     private FileOutputStream article_fos;
     private FileOutputStream inproceedings_fos;
     private FileOutputStream proceedings_fos;
@@ -100,24 +116,55 @@ public class Handler extends DefaultHandler {
     private FileOutputStream person_fos;
 
     /**
-     * Open all the CSV files.
-     * 
+     * Open all the CSV files and write the column headers
+     *
      * @throws SAXException
      */
     public void openAllFos() throws SAXException {
         try {
             new File("output").mkdirs();
-            article_fos = new FileOutputStream("output/article.csv");
-            inproceedings_fos = new FileOutputStream("output/inproceedings.csv");
-            proceedings_fos = new FileOutputStream("output/proceedings.csv");
-            book_fos = new FileOutputStream("output/book.csv");
-            incollection_fos = new FileOutputStream("output/incollection.csv");
-            phdthesis_fos = new FileOutputStream("output/phdthesis.csv");
-            mastersthesis_fos = new FileOutputStream("output/mastersthesis.csv");
-            www_fos = new FileOutputStream("output/www.csv");
-            writes_fos = new FileOutputStream("output/writes.csv");
-            edits_fos = new FileOutputStream("output/edits.csv");
-            person_fos = new FileOutputStream("output/person.csv");
+
+            /*
+             * Please note that the variable names are misnomers -- the values
+             * they refer to are more appropriately refered to by the fileName
+             * they generate.
+             */
+            entity_fos = new FileOutputStream("output/01entity.csv");
+            entity_fos.write((ENTITY_COLS).getBytes());
+
+            article_fos = new FileOutputStream("output/02article.csv");
+            article_fos.write((ARTICLE_COLS).getBytes());
+
+            inproceedings_fos = new FileOutputStream("output/03inproceedings.csv");
+            inproceedings_fos.write((INPROCEDINGS_COLS).getBytes());
+
+            proceedings_fos = new FileOutputStream("output/04proceedings.csv");
+            proceedings_fos.write((PROCEEDINGS_COLS).getBytes());
+
+            book_fos = new FileOutputStream("output/05book.csv");
+            book_fos.write((BOOK_COLS).getBytes());
+
+            incollection_fos = new FileOutputStream("output/06incollection.csv");
+            incollection_fos.write((INCOLLECTION_COLS).getBytes());
+
+            phdthesis_fos = new FileOutputStream("output/07phdthesis.csv");
+            phdthesis_fos.write((PHDTHESIS_COLS).getBytes());
+
+            mastersthesis_fos = new FileOutputStream("output/08mastersthesis.csv");
+            mastersthesis_fos.write((MASTERSTHESIS_COLS).getBytes());
+
+            www_fos = new FileOutputStream("output/09person.csv");
+            www_fos.write((WWW_COLS).getBytes());
+
+            writes_fos = new FileOutputStream("output/10alias_writes.csv");
+            writes_fos.write((WRITES_COLS).getBytes());
+
+            edits_fos = new FileOutputStream("output/11alias_edits.csv");
+            edits_fos.write((EDITS_COLS).getBytes());
+
+            person_fos = new FileOutputStream("output/00alias.csv");
+            person_fos.write((PERSON_COLS).getBytes());
+
         } catch (Exception e) {
             throw (new SAXException("Error opening output file", e));
         }
@@ -137,7 +184,7 @@ public class Handler extends DefaultHandler {
      * Receive notification of the start of an XML element. If it is a DBLP
      * element, reset the Entity object fields, update its type, and set its key
      * and ID.
-     * 
+     *
      * @param namespaceURI
      *            The namespace URI, or the empty string if the element has no
      *            namespace URI or if namespace processing is not being
@@ -151,7 +198,7 @@ public class Handler extends DefaultHandler {
      * @param atts
      *            The attributes attached to the element. If there are no
      *            attributes, it shall be an empty Attributes object.
-     * 
+     *
      * @throws SAXException
      */
     public void startElement(String namespaceURI, String localName,
@@ -217,10 +264,10 @@ public class Handler extends DefaultHandler {
      * entity, write its attributes to the corresponding CSV file. If it is an
      * author or editor, add their names, IDs, and the publication they
      * wrote/edited to the relevant maps.
-     * 
+     *
      * The values written for each entity can be changed to the columns the user
      * wishes to see in the resulting CSV file.
-     * 
+     *
      * @param namespaceURI
      *            The namespace URI, or the empty string if the element has no
      *            namespace URI or if namespace processing is not being
@@ -234,7 +281,7 @@ public class Handler extends DefaultHandler {
      * @param atts
      *            The attributes attached to the element. If there are no
      *            attributes, it shall be an empty Attributes object.
-     * 
+     *
      * @throws SAXException
      */
     public void endElement(String namespaceURI, String localName, String qName)
@@ -258,6 +305,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getBooktitle()) + ","
                         + writeValue(e.getCdrom()) + "\n";
                 article_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(INPROCEEDINGS)) {
                 result = e.getId() + "," + e.getKey() + ","
                         + writeValue(e.getTitle()) + ","
@@ -274,6 +322,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getAddress()) + ","
                         + writeValue(e.getCdrom()) + "\n";
                 inproceedings_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(PROCEEDINGS)) {
                 result = e.getId() + "," + e.getKey() + ","
                         + writeValue(e.getTitle()) + ","
@@ -292,6 +341,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getSeries()) + ","
                         + writeValue(e.getAddress()) + "\n";
                 proceedings_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(BOOK)) {
                 result = e.getId() + "," + e.getKey() + ","
                         + writeValue(e.getTitle()) + ","
@@ -309,6 +359,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getCdrom()) + ","
                         + writeValue(e.getSchool()) + "\n";
                 book_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(INCOLLECTION)) {
                 result = e.getId() + "," + e.getKey() + ","
                         + writeValue(e.getTitle()) + ","
@@ -324,6 +375,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getChapter()) + ","
                         + writeValue(e.getCdrom()) + "\n";
                 incollection_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(PHDTHESIS)) {
                 result = e.getId() + "," + e.getKey() + ","
                         + writeValue(e.getTitle()) + ","
@@ -339,6 +391,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getSeries()) + ","
                         + writeValue(e.getSchool()) + "\n";
                 phdthesis_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(MASTERSTHESIS)) {
                 result = e.getId() + "," + e.getKey() + ","
                         + writeValue(e.getTitle()) + ","
@@ -346,6 +399,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getUrl()) + "," + writeValue(e.getEe())
                         + "," + writeValue(e.getSchool()) + "\n";
                 mastersthesis_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(WWW)) {
                 result = e.getId() + "," + e.getKey() + ","
                         + writeValue(e.getTitle()) + ","
@@ -358,6 +412,7 @@ public class Handler extends DefaultHandler {
                         + writeValue(e.getChapter()) + ","
                         + writeValue(e.getSchool()) + "\n";
                 www_fos.write((result).getBytes());
+                entity_fos.write((e.getId() + "\n").getBytes());
             } else if (qName.equals(AUTHOR)) {
                 people.put(authorName, personId);
                 personId++;
@@ -367,8 +422,8 @@ public class Handler extends DefaultHandler {
                     HashSet<Integer> publications = new HashSet<Integer>();
                     publications.add(e.getId());
                     authors.put(authorName, publications);
-                    authorName = "";
                 }
+                authorName = "";
             } else if (qName.equals(EDITOR)) {
                 people.put(editorName, personId);
                 personId++;
@@ -378,8 +433,8 @@ public class Handler extends DefaultHandler {
                     HashSet<Integer> publications = new HashSet<Integer>();
                     publications.add(e.getId());
                     editors.put(editorName, publications);
-                    editorName = "";
                 }
+                editorName = "";
             }
         } catch (Exception e) {
             throw (new SAXException("Error writing to file.", e));
@@ -391,19 +446,19 @@ public class Handler extends DefaultHandler {
      * Receive notification of character data inside of a XML element. If it is
      * a DBLP entity, update the Entity object's corresponding fields and
      * attributes.
-     * 
+     *
      * SAX does not guarantee that all the characters of an XML element will be
      * included, so the method concatenates the Entity object's current value
      * with the new characters. Any commas are replaced with spaces as they
-     * would issues with reading the CSV file.
-     * 
+     * would cause issues with reading the CSV file.
+     *
      * @param ch
      *            The characters.
      * @param start
      *            The start position in the character array.
      * @param length
      *            The number of characters to use from the character array.
-     * 
+     *
      * @throws SAXException
      */
     public void characters(char[] ch, int start, int length)
@@ -526,7 +581,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of the end of the XML document, write all the
      * person, author, and editor entries and close all the FileOutputStreams.
-     * 
+     *
      * @throws SAXException
      */
     public void endDocument() throws SAXException {
@@ -573,7 +628,7 @@ public class Handler extends DefaultHandler {
 
     /**
      * Return the String if it is not empty, \N if it is empty.
-     * 
+     *
      * @param s
      *            The String to write.
      */
@@ -583,7 +638,7 @@ public class Handler extends DefaultHandler {
 
     /**
      * Return SAXParseException info in a String.
-     * 
+     *
      * @param spe
      *            The SAXParseException.
      */
@@ -600,7 +655,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of a warning while parsing and print out relevant
      * information.
-     * 
+     *
      * @param e
      *            The warning information encoded as an exception.
      */
@@ -612,7 +667,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of an error while parsing and print out relevant
      * information.
-     * 
+     *
      * @param e
      *            The warning information encoded as an exception.
      */
@@ -624,7 +679,7 @@ public class Handler extends DefaultHandler {
     /**
      * Receive notification of a fatal error while parsing and print out
      * relevant information.
-     * 
+     *
      * @param e
      *            The warning information encoded as an exception.
      */

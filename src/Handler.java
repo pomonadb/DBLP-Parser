@@ -124,6 +124,11 @@ public class Handler extends DefaultHandler {
         try {
             new File("output").mkdirs();
 
+            /*
+             * Please note that the variable names are misnomers -- the values
+             * they refer to are more appropriately refered to by the fileName
+             * they generate.
+             */
             entity_fos = new FileOutputStream("output/01entity.csv");
             entity_fos.write((ENTITY_COLS).getBytes());
 
@@ -148,16 +153,16 @@ public class Handler extends DefaultHandler {
             mastersthesis_fos = new FileOutputStream("output/08mastersthesis.csv");
             mastersthesis_fos.write((MASTERSTHESIS_COLS).getBytes());
 
-            www_fos = new FileOutputStream("output/09www.csv");
+            www_fos = new FileOutputStream("output/09person.csv");
             www_fos.write((WWW_COLS).getBytes());
 
-            writes_fos = new FileOutputStream("output/10writes.csv");
+            writes_fos = new FileOutputStream("output/10alias_writes.csv");
             writes_fos.write((WRITES_COLS).getBytes());
 
-            edits_fos = new FileOutputStream("output/11edits.csv");
+            edits_fos = new FileOutputStream("output/11alias_edits.csv");
             edits_fos.write((EDITS_COLS).getBytes());
 
-            person_fos = new FileOutputStream("output/00person.csv");
+            person_fos = new FileOutputStream("output/00alias.csv");
             person_fos.write((PERSON_COLS).getBytes());
 
         } catch (Exception e) {

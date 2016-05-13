@@ -260,16 +260,7 @@ def populate_fullpubs(c):
                INNER JOIN mastersthesis ON entity.eid = mastersthesis.eid)
           UNION
           (SELECT entity.eid, title, null, year FROM entity
-               INNER JOIN incollection ON entity.eid = incollection.eid)
-          UNION
-          (SELECT entity.eid, title, month, year FROM entity
-               INNER JOIN inproceedings ON entity.eid = inproceedings.eid)
-          UNION
-          (SELECT entity.eid, title, month, year FROM entity
-               INNER JOIN proceedings ON entity.eid = proceedings.eid)
-          UNION
-          (SELECT entity.eid, title, null, year FROM entity
-              INNER JOIN www ON entity.eid = www.eid);
+               INNER JOIN incollection ON entity.eid = incollection.eid);
      ''')
 
 def populate_coauthor(c):
